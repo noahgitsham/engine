@@ -12,4 +12,7 @@ add_executable(engine src/main.cpp)
 
 # Local libraries
 add_subdirectory(lib/glad/)
-target_link_libraries(engine PRIVATE glad)
+find_package(glfw3 REQUIRED)
+
+# Link libraries
+target_link_libraries(engine glad glfw)
