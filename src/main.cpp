@@ -1,5 +1,6 @@
 #include<iostream>
 #include<cmath>
+#include<stdbool.h>
 
 #include<glad/glad.h>
 #include<GLFW/glfw3.h>
@@ -8,6 +9,7 @@ const unsigned int winInitW = 800;
 const unsigned int winInitH = 600;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+void toggleWireframeCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 void processInput(GLFWwindow *window);
 
 const char *vertexShaderSource =
@@ -123,12 +125,14 @@ int main (int argc, char *argv[]) {
 
 	int t = 0;
 
+	glfwSetKeyCallback(window, toggleWireframeCallback);
+
 	// Main loop
 	while(!glfwWindowShouldClose(window))
 	{
 		processInput(window);
 
-		glClearColor(0.16f, 0.16f, 0.20f, 1.0f);
+		glClearColor(29/255.0, 32/255.0, 33/255.0, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		//vertices[0] = -1;
@@ -137,7 +141,6 @@ int main (int argc, char *argv[]) {
 		//glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 		glUseProgram(shaderProgram);
 		glBindVertexArray(VAO);
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 
 		glfwSwapBuffers(window); // "Swap" colour buffer onto screen
@@ -153,6 +156,17 @@ int main (int argc, char *argv[]) {
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 	glViewport(0, 0, width, height);
 }  
+
+void toggleWireframeCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+	if (key == GLFW_KEY_W && action == GLFW_PRESS) {
+		GLint polygonMode[2];
+		glGetIntegerv(GL_POLYGON_MODE, polygonMode);
+		if (polygonMode[0] == GL_FILL)
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		else
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	}
+}
 
 void processInput(GLFWwindow *window) {
     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
