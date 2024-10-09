@@ -60,10 +60,18 @@ int main (int argc, char *argv[]) {
 
 	// Geometry
 	float vertices[] = {
-		-0.5f, -0.5f, 0.0f,
-		 0.5f, -0.5f, 0.0f,
-		 0.0f,  0.5f, 0.0f
+		 0.5f,  0.5f, 0.0f, // tr
+		 0.5f, -0.5f, 0.0f, // br
+		-0.5f, -0.5f, 0.0f, // bl
+		-0.5f,  0.5f, 0.0f  // tl
 	};
+	unsigned int indices[] = {  // note that we start from 0!
+		0, 1, 3, // first triangle
+		1, 2, 3  // second triangle
+	}; 
+
+	unsigned int EBO;
+	glGenBuffers(1, &EBO);
 
 	// Vertex shader
 	unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
@@ -78,6 +86,7 @@ int main (int argc, char *argv[]) {
 	{
 		glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
 		std::cout << "Vertex shader failed to compile:\n" << infoLog << std::endl;
+		return -1;
 	}
 
 	// Fragment shader
@@ -90,6 +99,7 @@ int main (int argc, char *argv[]) {
 	{
 		glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
 		std::cout << "Fragment shader failed to compile:\n" << infoLog << std::endl;
+		return -1;
 	}
 
 	// Shader program
@@ -116,8 +126,11 @@ int main (int argc, char *argv[]) {
 	glBindVertexArray(VAO);
 
 	// Buffer inits
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
 
 	// Buffers
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
@@ -127,6 +140,8 @@ int main (int argc, char *argv[]) {
 
 	glfwSetKeyCallback(window, toggleWireframeCallback);
 
+	glBindVertexArray(VAO);
+
 	// Main loop
 	while(!glfwWindowShouldClose(window))
 	{
@@ -135,13 +150,12 @@ int main (int argc, char *argv[]) {
 		glClearColor(29/255.0, 32/255.0, 33/255.0, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		//vertices[0] = -1;
-		//vertices[3] = 1;
-		//vertices[7] = 1;
-		//glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+		/*vertices[0] *= -1;*/
+		/*vertices[3] = 1;*/
+		/*vertices[7] = 1;*/
+		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
 		glUseProgram(shaderProgram);
-		glBindVertexArray(VAO);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 		glfwSwapBuffers(window); // "Swap" colour buffer onto screen
 		glfwPollEvents();    
@@ -149,7 +163,7 @@ int main (int argc, char *argv[]) {
 
 	// Clean up and exit
 	glfwTerminate();
-	std::cout << "Exited successfully" << std::endl;
+	std::cout << "Terminated successfully" << std::endl;
 	return 0;
 }
 
