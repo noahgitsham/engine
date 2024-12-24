@@ -1,5 +1,6 @@
 #include<iostream>
 #include<cmath>
+#include<chrono>
 #include<stdbool.h>
 
 #include<glad/glad.h>
@@ -16,19 +17,19 @@ const char *vertexShaderSource =
 R"(#version 330 core
 layout (location = 0) in vec3 aPos;
 
-void main()
-{
+void main() {
    gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
-})";
+}
+)";
 
 const char *fragmentShaderSource =
 R"(#version 330 core
 out vec4 FragColor;
 
-void main()
-{
-    FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);
-})";
+void main() {
+    FragColor = vec4(gl_FragCoord.x/800, gl_FragCoord.y/600, 0.2f, 1.0f);
+}
+)";
 
 
 int main (int argc, char *argv[]) {
@@ -38,9 +39,11 @@ int main (int argc, char *argv[]) {
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
+	// Force floating window on tiling wm
+	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+
 	GLFWwindow* window = glfwCreateWindow(winInitW, winInitH, "engine", NULL, NULL);
-	if (window == NULL)
-	{
+	if (window == NULL) {
 		std::cout << "Failed to create GLFW window" << std::endl;
 		glfwTerminate();
 		return -1;
@@ -53,6 +56,7 @@ int main (int argc, char *argv[]) {
 		std::cout << "Failed to initialize GLAD" << std::endl;
 		return -1;
 	}    
+
 
 	glViewport(0, 0, winInitW, winInitH);
 
@@ -70,9 +74,6 @@ int main (int argc, char *argv[]) {
 		1, 2, 3  // second triangle
 	}; 
 
-	unsigned int EBO;
-	glGenBuffers(1, &EBO);
-
 	// Vertex shader
 	unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
 	glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
@@ -82,8 +83,7 @@ int main (int argc, char *argv[]) {
 	char infoLog[512];
 
 	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-	if(!success)
-	{
+	if(!success) {
 		glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
 		std::cout << "Vertex shader failed to compile:\n" << infoLog << std::endl;
 		return -1;
@@ -95,8 +95,7 @@ int main (int argc, char *argv[]) {
 	glCompileShader(fragmentShader);
 
 	glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-	if(!success)
-	{
+	if(!success) {
 		glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
 		std::cout << "Fragment shader failed to compile:\n" << infoLog << std::endl;
 		return -1;
@@ -117,6 +116,9 @@ int main (int argc, char *argv[]) {
 	glDeleteShader(vertexShader);
 	glDeleteShader(fragmentShader);
 
+	unsigned int EBO;
+	glGenBuffers(1, &EBO);
+
 	unsigned int VBO;
 	glGenBuffers(1, &VBO);
 
@@ -136,11 +138,11 @@ int main (int argc, char *argv[]) {
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
-	int t = 0;
-
 	glfwSetKeyCallback(window, toggleWireframeCallback);
 
 	glBindVertexArray(VAO);
+
+	auto st = std::chrono::steady_clock::now();
 
 	// Main loop
 	while(!glfwWindowShouldClose(window))
@@ -150,9 +152,12 @@ int main (int argc, char *argv[]) {
 		glClearColor(29/255.0, 32/255.0, 33/255.0, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		/*vertices[0] *= -1;*/
-		/*vertices[3] = 1;*/
-		/*vertices[7] = 1;*/
+		auto nt = std::chrono::steady_clock::now();
+		float m = std::chrono::duration_cast<std::chrono::milliseconds>(nt-st).count();
+		vertices[0] = sin(m/1000);
+		vertices[1] = cos(m/1000);
+		vertices[6] = -sin(m/1000);
+		vertices[7] = -cos(m/1000);
 		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
 		glUseProgram(shaderProgram);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
