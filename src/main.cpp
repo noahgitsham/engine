@@ -7,7 +7,7 @@
 #include<GLFW/glfw3.h>
 
 const unsigned int winInitW = 800;
-const unsigned int winInitH = 600;
+const unsigned int winInitH = 800;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void toggleWireframeCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
@@ -156,8 +156,12 @@ int main (int argc, char *argv[]) {
 		float m = std::chrono::duration_cast<std::chrono::milliseconds>(nt-st).count();
 		vertices[0] = sin(m/1000);
 		vertices[1] = cos(m/1000);
+		vertices[3] = cos(m/1000);
+		vertices[4] = -sin(m/1000);
 		vertices[6] = -sin(m/1000);
 		vertices[7] = -cos(m/1000);
+		vertices[9] = -cos(m/1000);
+		vertices[10] = sin(m/1000);
 		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
 		glUseProgram(shaderProgram);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
